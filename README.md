@@ -22,10 +22,10 @@ Outputs a summary of all successfully created accounts
 
 ## Example CSV Format
 
-FirstName,LastName,Department
-Alice,Smith,Admins
-Bob,Jones,Standard
-Charlie,Brown,Service Accounts
+FirstName,LastName,Department  
+Alice,Smith,Admins  
+Bob,Jones,Standard  
+Charlie,Brown,Service Accounts  
 
 ---
 
