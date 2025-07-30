@@ -31,9 +31,12 @@ if (-not $SamAccountName) {
 $user = Get-ADUser -Filter { SamAccountName -eq $SamAccountName } -ErrorAction SilentlyContinue
 
 if (-not $user) {
-    Write-Host "User '$SamAccountName' not found." -ForegroundColor Yellow
+    Write-Host "User '$SamAccountName' not found. Check spelling or search with Get-ADUser." -ForegroundColor Yellow
     exit
 }
+
+# Show where the user is located (OU)
+Write-Host "User found in: $($user.DistinguishedName)" -ForegroundColor Cyan
 
 # Confirm before deletion
 $confirmation = Read-Host "Are you sure you want to delete '$SamAccountName'? (Y/N)"
