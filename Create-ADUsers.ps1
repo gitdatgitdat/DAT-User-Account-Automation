@@ -16,67 +16,71 @@
     .\user.csv
 #>
 
-#===== Configuration =====
+# ===== Configuration =====
 
-#Path to CSV file with user info.
+# Path to CSV file with user info.
 $csvPath = "Z:\Scripts\user.csv"
 
-#Setting default password.
+# Setting default password.
 $DefaultPassword = "P@ssw0rd123"
 
-#Domain name (for UPN)
+# Domain name (for UPN)
 $DomainName = "homelab.local"
 
-#Array for successfully created account.
+# Array for successfully created account.
 $CreatedUsers = @()
 
 # ===== Import CSV and process =====
 
-#Import the CSV and loop through each entry.
+# Import the CSV and loop through each entry.
 Import-CSV -Path $csvPath | ForEach-Object {
     $FirstName = $_.FirstName 
     $LastName = $_.LastName 
     $Department = $_.Department 
 
-    #Create username and email.
-    $SamAccountName = ($FirstName.Substring(0,1) + $LastName).ToLower()
-    $UserPrincipalName = "$SamAccountName@homelab.local"
+# Create username and email.
+$SamAccountName = ($FirstName.Substring(0,1) + $LastName).ToLower()
+$UserPrincipalName = "$SamAccountName@$DomainName"
 
-    #Choose OU based on department.
-    switch ($Department.ToLower()) {
-        "admins" { $OUPath = 'OU=Admins,OU=Homelab Users,DC=homelab,DC=local' }
-        "standard" { $OUPath = 'OU=Standard,OU=Homelab Users,DC=homelab,DC=local' }
-        "service accounts" { $OUPath = 'OU=Service Accounts,OU=Homelab Users,DC=homelab,DC=local' }
-        default { $OUPath = 'OU=Standard,OU=Homelab Users,DC=homelab,DC=local' }
-    }
+# Choose OU based on department.
+switch ($Department.ToLower()) {
+    "admins" { $OUPath = 'OU=Admins,OU=Homelab Users,DC=homelab,DC=local' }
+    "standard" { $OUPath = 'OU=Standard,OU=Homelab Users,DC=homelab,DC=local' }
+    "service accounts" { $OUPath = 'OU=Service Accounts,OU=Homelab Users,DC=homelab,DC=local' }
+    default { $OUPath = 'OU=Standard,OU=Homelab Users,DC=homelab,DC=local' }
+}
 
-    #Verify OU exists.
-    if (-not (Get-ADOrganizationalUnit -LDAPFilter "(distinguishedName=$OUPath)" -ErrorAction SilentlyContinue)) {
-        Write-Host "OU not found: $OUPath. Skipping $FirstName $LastName." -ForegroundColor Yellow
-        return
-    }
+# Verify OU exists.
+if (-not (Get-ADOrganizationalUnit -LDAPFilter "(distinguishedName=$OUPath)" -ErrorAction SilentlyContinue)) {
+    Write-Host "OU not found: $OUPath. Skipping $FirstName $LastName." -ForegroundColor Yellow
+    return
+}
 
-    #Check if user already exists.
-    if (Get-ADUser -Filter {SamAccountName -eq $SamAccountName}) {
-        Write-Host "User $SamAccountName already exists. Skipping..." -ForegroundColor Red
-        return
-    }
+# Check if user already exists.
+if (Get-ADUser -Filter {SamAccountName -eq $SamAccountName}) {
+    Write-Host "User $SamAccountName already exists. Skipping..." -ForegroundColor Red
+    return
+}
 
-    #Debug output.
-    Write-Host "Creating user: $FirstName $LastName in $OUPath." -ForegroundColor Green
+# Debug output.
+Write-Host "Creating user: $FirstName $LastName in $OUPath." -ForegroundColor Green
 
-    #Create the user
-    New-ADUser `
-        -Name "$FirstName $LastName" `
-        -GivenName $FirstName `
-        -Surname $LastName `
-        -SamAccountName $SamAccountName `
-        -UserPrincipalName $UserPrincipalName `
-        -Path $OUPath `
-        -AccountPassword (ConvertTo-SecureString $DefaultPassword -AsPlainText -Force) `
-        -Enabled $true
+# Create the user
+New-ADUser `
+    -Name "$FirstName $LastName" `
+    -GivenName $FirstName `
+    -Surname $LastName `
+    -SamAccountName $SamAccountName `
+    -UserPrincipalName $UserPrincipalName `
+    -Path $OUPath `
+    -AccountPassword (ConvertTo-SecureString $DefaultPassword -AsPlainText -Force) `
+    -Enabled $true
 
-#Print summary of created users
+# Track created user
+$CreatedUsers += "$FirstName $LastName"
+} 
+
+# Print summary of created users
 if ($CreatedUsers.Count -gt 0) {
     Write-Host "`nSuccessfully created users:" -ForegroundColor Cyan
     $CreatedUsers | ForEach-Object { Write-Host " - $_" }
