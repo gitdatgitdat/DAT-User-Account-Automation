@@ -1,26 +1,41 @@
 ## Bulk Active Directory User Creation Script
 
-This PowerShell script automates bulk user creation in Active Directory from a CSV file. It reads first name, last name, and department values, then places each account into the correct Organizational Unit (OU) based on department mapping.
+This collection of PowerShell scripts automates bulk user creation and cleanup in Active Directory.   
+It uses a CSV file for input and places accounts into Organizational Units (OUs) based on department mapping.
 
 ---
 
 ## Features
 
-Imports users from a CSV file
+- Bulk User Creation
 
-Generates usernames (first initial + last name) and UPNs
+Imports users from a CSV file.
 
-Assigns users to OUs based on department
+Generates usernames (first initial + last name) and UPNs.
 
-Validates OU existence before creation
+Assigns accounts to OUs based on department mapping.
 
-Skips duplicates if accounts already exist
+Verifies OU existence before creating accounts.
 
-Outputs a summary of all successfully created accounts
+Skips duplicates automatically.
+
+Displays a summary of successfully created accounts.
+
+- Bulk User Removal
+
+Removes all accounts from specified OUs (e.g., test users).
+
+Includes confirmation prompt for safety.
+
+- Single User Removal
+
+Deletes a single user account by SamAccountName.
+
+Confirms user existence and prompts before removal.
 
 ---
 
-## Example CSV Format
+## Example CSV for Bulk User Creation
 
 FirstName,LastName,Department  
 Alice,Smith,Admins  
@@ -29,13 +44,23 @@ Charlie,Brown,Service Accounts
 
 ---
 
-##Usage
+## Usage
 
 Ensure RSAT (Active Directory module) is installed.
 
 Update the CSV path and OU mappings in the script to match your environment.
 
 Run PowerShell as a domain administrator and run:
+
+# Bulk create users
 .\Create-ADUsers.ps1
+
+# Bulk remove test users
+.\Clear-Lab-ADUsers.ps1
+
+# Remove single user
+.\Remove-Single-ADUser.ps1 -SamAccountName bjones
+
+Additional inline comments are included within each script in the Tools folder for clarity.
 
 ---
