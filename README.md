@@ -52,13 +52,13 @@ Update the CSV path and OU mappings in the script to match your environment.
 
 Run PowerShell as a domain administrator and run:
 
-# Bulk create users
+- Bulk create users
 .\Create-ADUsers.ps1
 
-# Bulk remove test users
+- Bulk remove test users
 .\Clear-Lab-ADUsers.ps1
 
-# Remove single user
+- Remove single user
 .\Remove-Single-ADUser.ps1 -SamAccountName bjones
 
 Additional inline comments are included within each script in the Tools folder for clarity.
