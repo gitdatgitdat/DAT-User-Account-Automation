@@ -1,37 +1,43 @@
 ## Bulk Active Directory User Creation Script
 
-This collection of PowerShell scripts automates bulk user creation and cleanup in Active Directory.   
-It uses a CSV file for input and places accounts into Organizational Units (OUs) based on department mapping.
+A collection of PowerShell scripts to automate user account onboarding and offboarding within Active Directory.   
+These scripts help reduce manual work and ensure consistency when provisioning or deprovisioning accounts.  
 
 ---
 
 ## Features
 
-- Bulk User Creation
+- Onboarding (Create-ADUsers.ps1)
 
-Imports users from a CSV file.
+Bulk-create user accounts from a CSV file.
 
-Generates usernames (first initial + last name) and UPNs.
+Supports setting attributes like name, username, and department.
 
-Assigns accounts to OUs based on department mapping.
+Places users into the appropriate OU.
 
-Verifies OU existence before creating accounts.
+Prepares accounts for post-creation setup (e.g., assigning groups).
 
-Skips duplicates automatically.
+- Offboarding (Offboard-ADUser.ps1)
 
-Displays a summary of successfully created accounts.
+Disables a specified user account.
 
-- Bulk User Removal
+Moves the account to a Disabled Users OU.
 
-Removes all accounts from specified OUs (e.g., test users).
+Exports and removes group memberships (retains a log for reference).
 
-Includes confirmation prompt for safety.
+Resets the password for security.
 
 - Single User Removal
 
 Deletes a single user account by SamAccountName.
 
 Confirms user existence and prompts before removal.
+
+- Bulk User Removal
+
+Removes all accounts from specified OUs (e.g., test users).
+
+Includes confirmation prompt for safety.
 
 ---
 
@@ -55,12 +61,29 @@ Run PowerShell as a domain administrator and run:
 - Bulk create users
 .\Create-ADUsers.ps1
 
-- Bulk remove test users
-.\Clear-Lab-ADUsers.ps1
+- Offboard user
+.\Offboard-ADUser.ps1
 
 - Remove single user
 .\Remove-Single-ADUser.ps1 -SamAccountName bjones
 
+- Bulk remove test users
+.\Clear-Lab-ADUsers.ps1
+
 Additional inline comments are included within each script in the Tools folder for clarity.
+
+---
+
+## Planned Enhancements
+
+Single user creation
+
+Bulk offboarding
+
+Add OneDrive/SharePoint backup for offboarding
+
+Combine onboarding and offboarding into a single interactive menu
+
+Implement logging and summary reports for all actions
 
 ---
