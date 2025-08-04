@@ -12,7 +12,7 @@
     - Update `$DomainName` and OU paths to match your environment
 
 .EXAMPLE
-    .\Create-ADUsers.ps1
+    .\Onboard-Multi-ADUsers.ps1
     .\user.csv
 #>
 
@@ -78,7 +78,7 @@ New-ADUser `
 
 # Track created user
 $CreatedUsers += "$FirstName $LastName"
-} 
+}
 
 # Print summary of created users
 if ($CreatedUsers.Count -gt 0) {

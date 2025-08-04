@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+    Safely offboard a single Active Directory user.
+
+.DESCRIPTION
+    This script disables a user account, moves it to a "Disabled Users" OU,
+    removes non-essential group memberships (excluding Domain Users), and 
+    resets the password for security.
+
+.NOTES
+    - Requires RSAT: Active Directory module installed
+    - Run as a domain administrator
+    - Update `$disabledOU` to match your environment
+
+.EXAMPLE
+    .\Offboard-Single-ADUser.ps1
+    Enter the username when prompted (SAMAccountName or UPN)
+#>
+
 param (
     [string]$Username = $(Read-Host "Enter the SAMAccountName or UPN of the user to offboard: "),
     [string]$DisabledOU = "OU=Disabled Users,DC=lab,DC=local"
