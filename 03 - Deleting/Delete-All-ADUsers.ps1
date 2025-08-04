@@ -1,26 +1,19 @@
 <#
 .SYNOPSIS
-    Deletes all user accounts from specified Organizational Units (OUs) in Active Directory.
+    Delete all Active Directory users in the specified Organizational Units (OUs).
 
 .DESCRIPTION
-    This script removes all user accounts within the provided OUs.
-    Intended for lab environments to quickly reset test accounts.
+    This script removes every AD user account found in the specified OUs except built-in
+    administrator accounts. Designed for **lab environments only** — use with caution.
 
-    WARNING: This will permanently delete all users in the specified OUs. 
-
-.PARAMETER OUs
-    Distinguished Names (DNs) of the OUs to target for cleanup.
+.NOTES
+    - Intended strictly for test/lab environments
+    - Requires RSAT: Active Directory module installed
+    - Run as a domain administrator
+    - Provide distinguished names (DNs) for target OUs as parameters
 
 .EXAMPLE
-    # Clear test users from Admins and Standard OUs
-    $OUs = @(
-        "OU=Admins,OU=Lab Users,DC=example,DC=local",
-        "OU=Standard,OU=Lab Users,DC=example,DC=local"
-    )
-    .\Clear-Lab-ADUsers.ps1 -OUs $OUs
-
-    # Alternative with same result
-    .\Clear-ADUsers.ps1 -OUs "OU=Admins,DC=example,DC=com","OU=Standard,DC=example,DC=com"
+    .\Delete-All-ADUsers.ps1 -OUs "OU=Standard,OU=Homelab Users,DC=homelab,DC=local","OU=Admins,OU=Homelab Users,DC=homelab,DC=local"
 #>
 
 param (
@@ -28,9 +21,12 @@ param (
     [string[]]$OUs
 )
 
+# Import Active Directory module
+Import-Module ActiveDirectory
+
 # Confirmation prompt
 do {
-    $confirmation = Read-Host "Are you sure you want to delete ALL users in the specified OUs? (Y/N)"
+    $confirmation = Read-Host "Are you sure you want to DELETE ALL users in the specified OUs? (Y/N)"
 } until ($confirmation -match "^[YyNn]$")
 
 if ($confirmation -eq "N" -or $confirmation -eq "n") {
@@ -38,9 +34,16 @@ if ($confirmation -eq "N" -or $confirmation -eq "n") {
     exit
 }
 
+# Iterate through each OU and remove users
 foreach ($OU in $OUs) {
-    Write-Host "Removing all users from: $OU" -ForegroundColor Yellow
-    Get-ADUser -Filter * -SearchBase $OU | Remove-ADUser -Confirm:$false
+    Write-Host "`nRemoving all users from: $OU" -ForegroundColor Cyan
+    Get-ADUser -Filter * -SearchBase $OU | ForEach-Object {
+        # Skip built-in Administrator account (safety check)
+        if ($_.SamAccountName -ne "Administrator") {
+            Remove-ADUser -Identity $_ -Confirm:$false
+            Write-Host "Removed user: $($_.SamAccountName)" -ForegroundColor Yellow
+        }
+    }
 }
 
-Write-Host "All specified users removed." -ForegroundColor Green
+Write-Host "`nAll specified users removed." -ForegroundColor Green
