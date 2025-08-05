@@ -4,13 +4,14 @@
 
 .DESCRIPTION
     This script disables a user account, moves it to a "Disabled Users" OU,
-    removes non-essential group memberships (excluding Domain Users), and 
-    resets the password for security.
+    removes non-essential group memberships (excluding Domain Users),
+    logs the memberships, and resets the password for security.
 
 .NOTES
     - Requires RSAT: Active Directory module installed
     - Run as a domain administrator
-    - Update `$disabledOU` to match your environment
+    - Update `$DisabledOU` to match your environment
+    - Logs are saved under `.\Logs\Offboarding`
 
 .EXAMPLE
     .\Offboard-Single-ADUser.ps1
@@ -22,8 +23,10 @@ param (
     [string]$DisabledOU = "OU=Disabled Users,DC=lab,DC=local"
 )
 
+# Import Active Directory module
 Import-Module ActiveDirectory
 
+# Validate user exists
 $user = Get-ADUser -Identity $Username -Properties MemberOf, DistinguishedName -ErrorAction SilentlyContinue
 if (-not $user) {
     Write-Host "User '$Username' not found in Active Directory." -ForegroundColor Red
@@ -32,18 +35,18 @@ if (-not $user) {
 
 Write-Host "`nStarting offboarding process for $($user.SAMAccountName)..." -ForegroundColor Cyan
 
-# Disable
+# Disable account
 Disable-ADAccount -Identity $user.SAMAccountName
-Write-Host "Account disabled."
+Write-Host "Account disabled." -ForegroundColor Yellow
 
 # Move to Disabled OU
 Move-ADObject -Identity $user.DistinguishedName -TargetPath $DisabledOU
-Write-Host "Moved account to Disabled Users OU."
+Write-Host "Moved account to Disabled Users OU." -ForegroundColor Yellow
 
-# Group handling
+# Log and remove group memberships
 $groups = $user.MemberOf
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
-$logPath = Join-Path $scriptPath "Offboard-Logs"
+$logPath = Join-Path $scriptPath "Logs\Offboarding"
 
 if ($groups) {
     $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
@@ -57,15 +60,16 @@ if ($groups) {
             Remove-ADGroupMember -Identity $group -Members $user -Confirm:$false
         }
     }
-    Write-Host "Group memberships removed (saved to $logFile)."
+    Write-Host "Group memberships removed (saved to $logFile)." -ForegroundColor Yellow
 }
 else {
-    Write-Host "No additional group memberships found."
+    Write-Host "No additional group memberships found." -ForegroundColor Yellow
 }
 
-# Reset password
+# Reset password for security
 $newPass = [System.Web.Security.Membership]::GeneratePassword(12,2)
 Set-ADAccountPassword -Identity $user.SAMAccountName -Reset -NewPassword (ConvertTo-SecureString $newPass -AsPlainText -Force)
-Write-Host "Password reset for added security."
+Write-Host "Password reset for added security." -ForegroundColor Yellow
 
+# Completion
 Write-Host "`nOffboarding completed for $Username." -ForegroundColor Green
