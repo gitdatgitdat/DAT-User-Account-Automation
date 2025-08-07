@@ -48,16 +48,16 @@ Includes onboarding, offboarding, and deletion scripts for both single and bulk 
 ## CSV Examples
 
 ### For `Onboard-Multi-ADUsers.ps1`:
-FirstName,LastName,Department
-Alice,Smith,Admins
-Bob,Jones,Standard
-Charlie,Brown,Service Accounts
+FirstName,LastName,Department  
+Alice,Smith,Admins  
+Bob,Jones,Standard  
+Charlie,Brown,Service Accounts  
 
 ### For `Offboard-Multi-ADUsers.ps1` and `Delete-Multi-ADUsers.ps1`:
-Username
-asmith
-bjones
-cbrown
+Username  
+asmith  
+bjones  
+cbrown  
 
 ---
 
@@ -106,7 +106,7 @@ Integrate with Microsoft Graph for Entra ID support
 
 ## Disclaimer
 
-These scripts are intended for educational, testing, or internal automation purposes.
-Always review and test in a lab environment before applying to production.
+These scripts are intended for educational, testing, or internal automation purposes.  
+Always review and test in a lab environment before applying to production.  
 
 ---
