@@ -67,29 +67,29 @@ cbrown
 
 ### Onboarding
 
-# Bulk onboarding
+- Bulk onboarding
 .\Onboard-Multi-ADUsers.ps1
 
-# Single user onboarding
+- Single user onboarding
 .\Onboard-Single-ADUser.ps1
 
 ### Offboarding
 
-# Bulk offboarding
+- Bulk offboarding
 .\Offboard-Multi-ADUsers.ps1
 
-# Single user offboarding
+- Single user offboarding
 .\Offboard-Single-ADUser.ps1
 
 ### Deletion
 
-# Delete specific user
+- Delete specific user
 .\Delete-Single-ADUser.ps1
 
-# Delete multiple users from CSV
+- Delete multiple users from CSV
 .\Delete-Multi-ADUsers.ps1
 
-# Delete all users in one or more OUs
+- Delete all users in one or more OUs
 .\Delete-All-ADUsers.ps1 -OUs "OU=Standard,OU=Homelab Users,DC=homelab,DC=local"
 
 ## Planned Enhancements
