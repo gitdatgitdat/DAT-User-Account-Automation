@@ -1,89 +1,112 @@
 ## Bulk Active Directory User Creation Script
+A PowerShell toolkit for automating user account management in Active Directory.  
+Includes onboarding, offboarding, and deletion scripts for both single and bulk users, designed to streamline routine administrative tasks in enterprise or lab environments.
 
-A collection of PowerShell scripts to automate user account onboarding and offboarding within Active Directory.   
-These scripts help reduce manual work and ensure consistency when provisioning or deprovisioning accounts.  
+---
+
+## Structure
+
+- **01 - Onboarding**
+  - `Onboard-Multi-ADUsers.ps1`: Bulk user creation from CSV
+  - `Onboard-Single-ADUser.ps1`: Interactive prompt for single user onboarding
+  - `user.csv`: CSV template for input
+
+- **02 - Offboarding**
+  - `Offboard-Multi-ADUsers.ps1`: Bulk user offboarding from CSV
+  - `Offboard-Single-ADUser.ps1`: Prompt-based offboarding for a single user
+  - `user.csv`: CSV template for input
+
+- **03 - Deleting**
+  - `Delete-Multi-ADUsers.ps1`: Bulk deletion via username CSV
+  - `Delete-Single-ADUser.ps1`: Delete one specified user
+  - `Delete-All-ADUsers.ps1`: Wipe all users from one or more OUs (for lab resets)
+  - `user.csv`: CSV template for input
 
 ---
 
 ## Features
 
-- Onboarding (Create-ADUsers.ps1)
+### Onboarding
+- Creates new AD users from a CSV or manual input
+- Assigns to OUs based on department
+- Preconfigures account password and username
+- Includes basic error handling for duplicates or missing OUs
 
-Bulk-create user accounts from a CSV file.
+### Offboarding
+- Disables accounts and moves them to a "Disabled Users" OU
+- Logs and removes group memberships (excluding `Domain Users`)
+- Resets passwords to ensure account is inaccessible
+- Supports single or bulk offboarding with logs
 
-Supports setting attributes like name, username, and department.
-
-Places users into the appropriate OU.
-
-Prepares accounts for post-creation setup (e.g., assigning groups).
-
-- Offboarding (Offboard-ADUser.ps1)
-
-Disables a specified user account.
-
-Moves the account to a Disabled Users OU.
-
-Exports and removes group memberships (retains a log for reference).
-
-Resets the password for security.
-
-- Single User Removal
-
-Deletes a single user account by SamAccountName.
-
-Confirms user existence and prompts before removal.
-
-- Bulk User Removal
-
-Removes all accounts from specified OUs (e.g., test users).
-
-Includes confirmation prompt for safety.
+### Deleting
+- Delete a specific user with confirmation
+- Bulk delete users by name from a CSV
+- Clear all users from one or more OUs (for test/lab environments)
 
 ---
 
-## Example CSV for Bulk User Creation
+## CSV Examples
 
-FirstName,LastName,Department  
-Alice,Smith,Admins  
-Bob,Jones,Standard  
-Charlie,Brown,Service Accounts  
+### For `Onboard-Multi-ADUsers.ps1`:
+FirstName,LastName,Department
+Alice,Smith,Admins
+Bob,Jones,Standard
+Charlie,Brown,Service Accounts
+
+### For `Offboard-Multi-ADUsers.ps1` and `Delete-Multi-ADUsers.ps1`:
+Username
+asmith
+bjones
+cbrown
 
 ---
 
 ## Usage
 
-Ensure RSAT (Active Directory module) is installed.
+> **Pre-requisite:** Run as a domain administrator with RSAT (Active Directory module) installed.
 
-Update the CSV path and OU mappings in the script to match your environment.
+### Onboarding
 
-Run PowerShell as a domain administrator and run:
+# Bulk onboarding
+.\Onboard-Multi-ADUsers.ps1
 
-- Bulk create users
-.\Create-ADUsers.ps1
+# Single user onboarding
+.\Onboard-Single-ADUser.ps1
 
-- Offboard user
-.\Offboard-ADUser.ps1
+### Offboarding
 
-- Remove single user
-.\Remove-Single-ADUser.ps1 -SamAccountName bjones
+# Bulk offboarding
+.\Offboard-Multi-ADUsers.ps1
 
-- Bulk remove test users
-.\Clear-Lab-ADUsers.ps1
+# Single user offboarding
+.\Offboard-Single-ADUser.ps1
 
-Additional inline comments are included within each script in the Tools folder for clarity.
+### Deletion
 
----
+# Delete specific user
+.\Delete-Single-ADUser.ps1
+
+# Delete multiple users from CSV
+.\Delete-Multi-ADUsers.ps1
+
+# Delete all users in one or more OUs
+.\Delete-All-ADUsers.ps1 -OUs "OU=Standard,OU=Homelab Users,DC=homelab,DC=local"
 
 ## Planned Enhancements
 
-Single user creation
+Add OneDrive/SharePoint backup before offboarding
 
-Bulk offboarding
+Combine onboarding/offboarding tools into an interactive menu
 
-Add OneDrive/SharePoint backup for offboarding
+Improve logging with success/failure summaries
 
-Combine onboarding and offboarding into a single interactive menu
+Add email/group assignment options
 
-Implement logging and summary reports for all actions
+Integrate with Microsoft Graph for Entra ID support
+
+## Disclaimer
+
+These scripts are intended for educational, testing, or internal automation purposes.
+Always review and test in a lab environment before applying to production.
 
 ---
