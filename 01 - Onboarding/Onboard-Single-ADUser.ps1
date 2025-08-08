@@ -23,6 +23,14 @@
 $DefaultPassword = "P@ssw0rd123"
 $DomainName = "homelab.local"
 
+# ===== Logging Setup =====
+$scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+$logPath = Join-Path $scriptPath "Logs"
+if (!(Test-Path $logPath)) { New-Item -ItemType Directory -Path $logPath | Out-Null }
+
+$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$logFile = Join-Path $logPath "$($MyInvocation.MyCommand.Name)-$timestamp.txt"
+
 # Prompt for user details
 $FirstName = Read-Host "Enter First Name"
 $LastName  = Read-Host "Enter Last Name"
@@ -42,28 +50,41 @@ switch ($Department.ToLower()) {
 
 # Validate OU exists
 if (-not (Get-ADOrganizationalUnit -LDAPFilter "(distinguishedName=$OUPath)" -ErrorAction SilentlyContinue)) {
-    Write-Host "OU not found: $OUPath. Please check your OU structure." -ForegroundColor Red
+    $msg = "OU not found: $OUPath. Aborting."
+    Write-Host $msg -ForegroundColor Red
+    $msg | Out-File $logFile -Append
     exit
 }
 
 # Check if user already exists
 if (Get-ADUser -Filter {SamAccountName -eq $SamAccountName}) {
-    Write-Host "User '$SamAccountName' already exists. Aborting." -ForegroundColor Yellow
+    $msg = "SKIPPED: User '$SamAccountName' already exists."
+    Write-Host $msg -ForegroundColor Yellow
+    $msg | Out-File $logFile -Append
     exit
 }
 
-# Debug output
+# Attempt user creation
 Write-Host "`nCreating user: $FirstName $LastName in $OUPath" -ForegroundColor Cyan
 
 # Create the user
-New-ADUser `
-    -Name "$FirstName $LastName" `
-    -GivenName $FirstName `
-    -Surname $LastName `
-    -SamAccountName $SamAccountName `
-    -UserPrincipalName $UserPrincipalName `
-    -Path $OUPath `
-    -AccountPassword (ConvertTo-SecureString $DefaultPassword -AsPlainText -Force) `
-    -Enabled $true
+try {
+    New-ADUser `
+        -Name "$FirstName $LastName" `
+        -GivenName $FirstName `
+        -Surname $LastName `
+        -SamAccountName $SamAccountName `
+        -UserPrincipalName $UserPrincipalName `
+        -Path $OUPath `
+        -AccountPassword (ConvertTo-SecureString $DefaultPassword -AsPlainText -Force) `
+        -Enabled $true
 
-Write-Host "User '$FirstName $LastName' created successfully." -ForegroundColor Green
+    $msg = "SUCCESS: Created user $SamAccountName in $OUPath"
+    Write-Host $msg -ForegroundColor Green
+    $msg | Out-File $logFile -Append
+}
+catch {
+    $msg = "ERROR: Failed to create $SamAccountName - $($_.Exception.Message)"
+    Write-Host $msg -ForegroundColor Red
+    $msg | Out-File $logFile -Append
+}

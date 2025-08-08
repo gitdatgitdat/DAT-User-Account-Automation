@@ -30,6 +30,14 @@ $DomainName = "homelab.local"
 # Array for successfully created account.
 $CreatedUsers = @()
 
+# ===== Logging Setup =====
+$scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+$logPath = Join-Path $scriptPath "Logs"
+if (!(Test-Path $logPath)) { New-Item -ItemType Directory -Path $logPath | Out-Null }
+
+$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$logFile = Join-Path $logPath "$($MyInvocation.MyCommand.Name)-$timestamp.txt"
+
 # ===== Import CSV and process =====
 
 # Import the CSV and loop through each entry.
@@ -52,39 +60,53 @@ switch ($Department.ToLower()) {
 
 # Verify OU exists.
 if (-not (Get-ADOrganizationalUnit -LDAPFilter "(distinguishedName=$OUPath)" -ErrorAction SilentlyContinue)) {
-    Write-Host "OU not found: $OUPath. Skipping $FirstName $LastName." -ForegroundColor Yellow
+    $msg = "OU not found: $OUPath. Skipping $FirstName $LastName."
+    Write-Host $msg -ForegroundColor Yellow
+    $msg | Out-File $logFile -Append
     return
 }
 
 # Check if user already exists.
 if (Get-ADUser -Filter {SamAccountName -eq $SamAccountName}) {
-    Write-Host "User $SamAccountName already exists. Skipping..." -ForegroundColor Red
+    $msg = "SKIPPED: User $SamAccountName already exists."
+    Write-Host $msg -ForegroundColor Red
+    $msg | Out-File $logFile -Append
     return
 }
 
 # Debug output.
 Write-Host "Creating user: $FirstName $LastName in $OUPath." -ForegroundColor Green
 
-# Create the user
-New-ADUser `
-    -Name "$FirstName $LastName" `
-    -GivenName $FirstName `
-    -Surname $LastName `
-    -SamAccountName $SamAccountName `
-    -UserPrincipalName $UserPrincipalName `
-    -Path $OUPath `
-    -AccountPassword (ConvertTo-SecureString $DefaultPassword -AsPlainText -Force) `
-    -Enabled $true
+# User creation and OU assignment. Otherwise reports failure.
+try {
+    New-ADUser `
+        -Name "$FirstName $LastName" `
+        -GivenName $FirstName `
+        -Surname $LastName `
+        -SamAccountName $SamAccountName `
+        -UserPrincipalName $UserPrincipalName `
+        -Path $OUPath `
+        -AccountPassword (ConvertTo-SecureString $DefaultPassword -AsPlainText -Force) `
+        -Enabled $true
 
-# Track created user
-$CreatedUsers += "$FirstName $LastName"
+    $CreatedUsers += "$FirstName $LastName"
+    $msg = "SUCCESS: Created user $SamAccountName in $OUPath"
+    Write-Host $msg -ForegroundColor Green
+    $msg | Out-File $logFile -Append
+}
+catch {
+    $msg = "ERROR: Failed to create $SamAccountName - $($_.Exception.Message)"
+    Write-Host $msg -ForegroundColor Red
+    $msg | Out-File $logFile -Append
+    }
 }
 
-# Print summary of created users
+# ===== Summary =====
 if ($CreatedUsers.Count -gt 0) {
     Write-Host "`nSuccessfully created users:" -ForegroundColor Cyan
-    $CreatedUsers | ForEach-Object { Write-Host " - $_" }
+    $CreatedUsers | ForEach-Object {
+        Write-Host " - $_"
+    }
 } else {
-    Write-Host "`nNo new users were created." -ForegroundColor Yellow        
-
+    Write-Host "`nNo new users were created." -ForegroundColor Yellow
 }
